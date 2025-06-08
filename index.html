@@ -1,0 +1,340 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis PPh Badan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: right;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        canvas {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Analisis PPh Badan</h1>
+
+    <h2>Tabel Analisis PPh Badan</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tahun</th>
+                <th>Pendapatan</th>
+                <th>Beban Operasional</th>
+                <th>Penyusutan</th>
+                <th>Laba Kena Pajak</th>
+                <th>PPh Badan Normal</th>
+                <th>PPh Badan Tax Holiday</th>
+                <th>Penyusutan Garis Lurus</th>
+                <th>Laba Kena Pajak Garis Lurus</th>
+                <th>PPh Badan Garis Lurus</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>2020</td>
+                <td>1,000,000,000</td>
+                <td>600,000,000</td>
+                <td>92,000,000</td>
+                <td>308,000,000</td>
+                <td>67,760,000</td>
+                <td>67,760,000</td>
+                <td>112,500,000</td>
+                <td>287,500,000</td>
+                <td>63,250,000</td>
+            </tr>
+            <tr>
+                <td>2021</td>
+                <td>1,200,000,000</td>
+                <td>700,000,000</td>
+                <td>79,200,000</td>
+                <td>420,800,000</td>
+                <td>92,576,000</td>
+                <td>92,576,000</td>
+                <td>112,500,000</td>
+                <td>387,500,000</td>
+                <td>85,250,000</td>
+            </tr>
+            <tr>
+                <td>2022</td>
+                <td>1,100,000,000</td>
+                <td>650,000,000</td>
+                <td>66,400,000</td>
+                <td>383,600,000</td>
+                <td>84,392,000</td>
+                <td>84,392,000</td>
+                <td>112,500,000</td>
+                <td>337,500,000</td>
+                <td>74,250,000</td>
+            </tr>
+            <tr>
+                <td>2023</td>
+                <td>1,300,000,000</td>
+                <td>750,000,000</td>
+                <td>53,600,000</td>
+                <td>496,400,000</td>
+                <td>109,208,000</td>
+                <td>0</td>
+                <td>112,500,000</td>
+                <td>437,500,000</td>
+                <td>96,250,000</td>
+            </tr>
+            <tr>
+                <td>2024</td>
+                <td>1,400,000,000</td>
+                <td>800,000,000</td>
+                <td>40,800,000</td>
+                <td>559,200,000</td>
+                <td>123,024,000</td>
+                <td>0</td>
+                <td>112,500,000</td>
+                <td>487,500,000</td>
+                <td>107,250,000</td>
+            </tr>
+            <tr>
+                <td>2025</td>
+                <td>1,500,000,000</td>
+                <td>850,000,000</td>
+                <td>28,000,000</td>
+                <td>622,000,000</td>
+                <td>136,840,000</td>
+                <td>0</td>
+                <td>112,500,000</td>
+                <td>537,500,000</td>
+                <td>118,250,000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="chart-container">
+        <canvas id="pphChart"></canvas>
+        <canvas id="labaChart"></canvas>
+        <canvas id="komponenChart"></canvas>
+        <canvas id="penyusutanChart"></canvas>
+    </div>
+
+    <script>
+        // Chart 1: PPh Badan (Line Chart)
+        new Chart(document.getElementById('pphChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [2020, 2021, 2022, 2023, 2024, 2025],
+                datasets: [
+                    {
+                        label: 'Tarif Normal',
+                        data: [67760000, 92576000, 84392000, 109208000, 123024000, 136840000],
+                        borderColor: '#66c2a5',
+                        backgroundColor: '#66c2a5',
+                        fill: false,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#66c2a5'
+                    },
+                    {
+                        label: 'Tax Holiday',
+                        data: [67760000, 92576000, 84392000, 0, 0, 0],
+                        borderColor: '#fc8d62',
+                        backgroundColor: '#fc8d62',
+                        fill: false,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fc8d62'
+                    },
+                    {
+                        label: 'Garis Lurus',
+                        data: [63250000, 85250000, 74250000, 96250000, 107250000, 118250000],
+                        borderColor: '#8da0cb',
+                        backgroundColor: '#8da0cb',
+                        fill: false,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#8da0cb'
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Perbandingan PPh Badan Berdasarkan Skenario'
+                    },
+                    legend: { display: true }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Tahun' } },
+                    y: { title: { display: true, text: 'PPh Badan (Rp)' } }
+                }
+            }
+        });
+
+        // Chart 2: Laba Kena Pajak (Bar Chart)
+        new Chart(document.getElementById('labaChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [2020, 2021, 2022, 2023, 2024, 2025],
+                datasets: [
+                    {
+                        label: 'Kombinasi',
+                        data: [308000000, 420800000, 383600000, 496400000, 559200000, 622000000],
+                        backgroundColor: '#66c2a5'
+                    },
+                    {
+                        label: 'Garis Lurus',
+                        data: [287500000, 387500000, 337500000, 437500000, 487500000, 537500000],
+                        backgroundColor: '#fc8d62'
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Laba Kena Pajak: Kombinasi vs Garis Lurus'
+                    },
+                    legend: { display: true }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Tahun' } },
+                    y: { title: { display: true, text: 'Laba Kena Pajak (Rp)' } }
+                }
+            }
+        });
+
+        // Chart 3: Komponen Keuangan (Stacked Bar Chart)
+        new Chart(document.getElementById('komponenChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [2020, 2021, 2022, 2023, 2024, 2025],
+                datasets: [
+                    {
+                        label: 'Pendapatan',
+                        data: [1000000000, 1200000000, 1100000000, 1300000000, 1400000000, 1500000000],
+                        backgroundColor: '#66c2a5'
+                    },
+                    {
+                        label: 'Beban Operasional',
+                        data: [600000000, 700000000, 650000000, 750000000, 800000000, 850000000],
+                        backgroundColor: '#fc8d62'
+                    },
+                    {
+                        label: 'Penyusutan',
+                        data: [92000000, 79200000, 66400000, 53600000, 40800000, 28000000],
+                        backgroundColor: '#8da0cb'
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Komponen Keuangan per Tahun'
+                    },
+                    legend: { display: true }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Tahun' } },
+                    y: {
+                        title: { display: true, text: 'Nilai (Rp)' },
+                        stacked: true
+                    }
+                }
+            }
+        });
+
+        // Chart 4: Penyusutan per Aset 2025 (Doughnut Chart)
+        new Chart(document.getElementById('penyusutanChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Mesin', 'Kendaraan', 'Bangunan', 'Peralatan'],
+                datasets: [{
+                    data: [50000000, 0, 50000000, 0],
+                    backgroundColor: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3']
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Distribusi Penyusutan per Aset (2025)'
+                    }
+                },
+                cutout: '40%'
+            }
+        });
+    </script>
+</body>
+</html>

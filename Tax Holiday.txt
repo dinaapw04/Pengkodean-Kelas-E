@@ -1,0 +1,19 @@
+SELECT
+  t.tahun,
+  SUM(t.pendapatan - (t.beban_operasional + t.penyusutan)) AS laba_kena_pajak,
+  CASE
+    WHEN t.tahun BETWEEN k.tax_holiday_awal AND k.tax_holiday_akhir THEN 0
+    ELSE ROUND(SUM(t.pendapatan - (t.beban_operasional + t.penyusutan)) * k.tax_rate, 2)
+  END AS pph_badan
+FROM
+  `project.dataset.transaksi_keuangan` t
+JOIN
+  `project.dataset.kebijakan_fiskal` k
+ON
+  t.tahun = k.tahun
+WHERE
+  t.skenario = 'tax_holiday'
+GROUP BY
+  t.tahun, k.tax_rate, k.tax_holiday_awal, k.tax_holiday_akhir
+ORDER BY
+  t.tahun;

@@ -1,0 +1,19 @@
+SELECT
+  t.tahun,
+  SUM(t.pendapatan) AS total_pendapatan,
+  SUM(t.beban_operasional + t.penyusutan) AS total_biaya,
+  SUM(t.pendapatan - (t.beban_operasional + t.penyusutan)) AS laba_kena_pajak,
+  k.tax_rate,
+  ROUND(SUM(t.pendapatan - (t.beban_operasional + t.penyusutan)) * k.tax_rate, 2) AS pph_badan
+FROM
+  `project.dataset.transaksi_keuangan` t
+JOIN
+  `project.dataset.kebijakan_fiskal` k
+ON
+  t.tahun = k.tahun
+WHERE
+  t.skenario = 'normal'
+GROUP BY
+  t.tahun, k.tax_rate
+ORDER BY
+  t.tahun;

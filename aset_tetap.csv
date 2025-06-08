@@ -1,4 +1,5 @@
 aset_id,kategori,nilai_perolehan,umur_ekonomis,metode
-1,mesin,1000000,10,garis_lurus
-2,bangunan,5000000,20,garis_lurus
-3,kendaraan,300000,5,saldo_menurun
+A001,Mesin,500000000,10,garis_lurus
+A002,Kendaraan,300000000,5,saldo_menurun
+A003,Bangunan,1000000000,20,garis_lurus
+A004,Peralatan,200000000,8,saldo_menurun

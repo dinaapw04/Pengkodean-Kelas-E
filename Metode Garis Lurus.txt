@@ -1,0 +1,10 @@
+SELECT
+  aset_id,
+  nilai_perolehan,
+  umur_ekonomis,
+  'garis_lurus' AS metode,
+  nilai_perolehan / umur_ekonomis AS depresiasi_tahunan
+FROM
+  `project.dataset.aset_tetap`
+WHERE
+  metode = 'garis_lurus';

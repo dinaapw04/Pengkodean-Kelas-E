@@ -1,0 +1,151 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Set style
+plt.style.use('seaborn-v0_8')
+sns.set_palette("Set2")
+
+# Fungsi penyusutan
+def penyusutan_garis_lurus(nilai_perolehan, umur_ekonomis):
+    return nilai_perolehan / umur_ekonomis
+
+def penyusutan_saldo_menurun(nilai_perolehan, umur_ekonomis, tahun, tahun_perolehan=2020):
+    rate = 2 / umur_ekonomis
+    nilai_buku = nilai_perolehan
+    for t in range(tahun_perolehan, tahun):
+        penyusutan = nilai_buku * rate
+        nilai_buku = max(0, nilai_buku - penyusutan)
+    return nilai_buku * rate if nilai_buku > 0 else 0
+
+# Dataset
+transaksi_data = {
+    'tahun': [2020, 2021, 2022, 2023, 2024, 2025],
+    'pendapatan': [1000000000, 1200000000, 1100000000, 1300000000, 1400000000, 1500000000],
+    'beban_operasional': [600000000, 700000000, 650000000, 750000000, 800000000, 850000000],
+    'penyusutan': [50000000, 60000000, 55000000, 60000000, 65000000, 70000000],
+    'skenario': ['normal', 'normal', 'normal', 'tax_holiday', 'tax_holiday', 'tax_holiday']
+}
+
+aset_tetap_data = {
+    'aset_id': ['A001', 'A002', 'A003', 'A004'],
+    'kategori': ['Mesin', 'Kendaraan', 'Bangunan', 'Peralatan'],
+    'nilai_perolehan': [500000000, 300000000, 1000000000, 200000000],
+    'umur_ekonomis': [10, 5, 20, 8],
+    'metode': ['garis_lurus', 'saldo_menurun', 'garis_lurus', 'saldo_menurun']
+}
+
+kebijakan_fiskal_data = {
+    'tahun': [2020, 2021, 2022, 2023, 2024, 2025],
+    'tax_rate': [0.22] * 6,
+    'tax_holiday_awal': [None, None, None, 2023, 2023, 2023],
+    'tax_holiday_akhir': [None, None, None, 2027, 2027, 2027]
+}
+
+# DataFrame
+df_transaksi = pd.DataFrame(transaksi_data)
+df_aset = pd.DataFrame(aset_tetap_data)
+df_fiskal = pd.DataFrame(kebijakan_fiskal_data)
+
+# Penyusutan per aset per tahun
+penyusutan_per_aset = []
+for _, aset in df_aset.iterrows():
+    for tahun in df_transaksi['tahun']:
+        if aset['metode'] == 'garis_lurus':
+            penyusutan = penyusutan_garis_lurus(aset['nilai_perolehan'], aset['umur_ekonomis'])
+        else:
+            penyusutan = penyusutan_saldo_menurun(aset['nilai_perolehan'], aset['umur_ekonomis'], tahun)
+        penyusutan_per_aset.append({
+            'aset_id': aset['aset_id'],
+            'kategori': aset['kategori'],
+            'tahun': tahun,
+            'penyusutan': penyusutan
+        })
+
+df_penyusutan = pd.DataFrame(penyusutan_per_aset)
+df_penyusutan_total = df_penyusutan.groupby('tahun')['penyusutan'].sum().reset_index()
+
+# Gabung ke transaksi dan fiskal
+df_analisis = df_transaksi.drop(columns=['penyusutan']).merge(df_penyusutan_total, on='tahun')
+df_analisis = df_analisis.merge(df_fiskal, on='tahun')
+
+# Hitung laba kena pajak dan PPh Badan
+df_analisis['laba_kena_pajak'] = df_analisis['pendapatan'] - df_analisis['beban_operasional'] - df_analisis['penyusutan']
+df_analisis['pph_badan_normal'] = df_analisis['laba_kena_pajak'] * df_analisis['tax_rate']
+df_analisis['pph_badan_tax_holiday'] = df_analisis.apply(
+    lambda row: 0 if row['skenario'] == 'tax_holiday' and row['tax_holiday_awal'] and row['tax_holiday_awal'] <= row['tahun'] <= row['tax_holiday_akhir']
+    else row['pph_badan_normal'], axis=1
+)
+
+# Skenario semua aset garis lurus
+penyusutan_garis_lurus_total = []
+for tahun in df_transaksi['tahun']:
+    total = sum(penyusutan_garis_lurus(r['nilai_perolehan'], r['umur_ekonomis']) for _, r in df_aset.iterrows())
+    penyusutan_garis_lurus_total.append({'tahun': tahun, 'penyusutan_garis_lurus': total})
+
+df_penyusutan_gl = pd.DataFrame(penyusutan_garis_lurus_total)
+df_analisis = df_analisis.merge(df_penyusutan_gl, on='tahun')
+df_analisis['laba_kena_pajak_garis_lurus'] = df_analisis['pendapatan'] - df_analisis['beban_operasional'] - df_analisis['penyusutan_garis_lurus']
+df_analisis['pph_badan_garis_lurus'] = df_analisis['laba_kena_pajak_garis_lurus'] * df_analisis['tax_rate']
+
+# Simpan versi angka asli (untuk grafik)
+df_plot = df_analisis.copy()
+
+# Format ke rupiah string
+for col in ['pendapatan', 'beban_operasional', 'penyusutan', 'laba_kena_pajak',
+            'pph_badan_normal', 'pph_badan_tax_holiday', 'penyusutan_garis_lurus',
+            'laba_kena_pajak_garis_lurus', 'pph_badan_garis_lurus']:
+    df_analisis[col] = df_analisis[col].apply(lambda x: f"{x:,.0f}")
+
+# Cetak tabel
+print("\n=== Tabel Analisis PPh Badan ===")
+print(df_analisis[['tahun', 'pendapatan', 'beban_operasional', 'penyusutan', 'laba_kena_pajak',
+                   'pph_badan_normal', 'pph_badan_tax_holiday', 'penyusutan_garis_lurus',
+                   'laba_kena_pajak_garis_lurus', 'pph_badan_garis_lurus']])
+
+# === VISUALISASI ===
+plt.figure(figsize=(15, 10))
+
+# Grafik 1: Garis PPh Badan
+plt.subplot(2, 2, 1)
+sns.lineplot(x='tahun', y='pph_badan_normal', data=df_plot, label='Tarif Normal', marker='o')
+sns.lineplot(x='tahun', y='pph_badan_tax_holiday', data=df_plot, label='Tax Holiday', marker='o')
+sns.lineplot(x='tahun', y='pph_badan_garis_lurus', data=df_plot, label='Garis Lurus', marker='o')
+plt.title('Perbandingan PPh Badan Berdasarkan Skenario')
+plt.xlabel('Tahun')
+plt.ylabel('PPh Badan (Rp)')
+plt.legend()
+plt.grid(True)
+
+# Grafik 2: Batang Laba Kena Pajak
+plt.subplot(2, 2, 2)
+df_melt = df_plot.melt(id_vars='tahun', value_vars=['laba_kena_pajak', 'laba_kena_pajak_garis_lurus'],
+                       var_name='Skenario', value_name='Laba Kena Pajak')
+sns.barplot(x='tahun', y='Laba Kena Pajak', hue='Skenario', data=df_melt)
+plt.title('Laba Kena Pajak: Kombinasi vs Garis Lurus')
+plt.xlabel('Tahun')
+plt.ylabel('Laba Kena Pajak (Rp)')
+plt.grid(True)
+
+# Grafik 3: Komponen Keuangan
+plt.subplot(2, 2, 3)
+plt.bar(df_plot['tahun'], df_plot['pendapatan'], label='Pendapatan')
+plt.bar(df_plot['tahun'], df_plot['beban_operasional'], label='Beban Operasional')
+plt.bar(df_plot['tahun'], df_plot['penyusutan'], label='Penyusutan')
+plt.title('Komponen Keuangan per Tahun')
+plt.xlabel('Tahun')
+plt.ylabel('Nilai (Rp)')
+plt.legend()
+plt.grid(True)
+
+# Grafik 4: Donat Penyusutan per Aset (2025)
+plt.subplot(2, 2, 4)
+penyusutan_2025 = df_penyusutan[df_penyusutan['tahun'] == 2025]
+plt.pie(penyusutan_2025['penyusutan'], labels=penyusutan_2025['kategori'],
+        autopct='%1.1f%%', startangle=90, wedgeprops=dict(width=0.4))
+plt.title('Distribusi Penyusutan per Aset (2025)')
+plt.axis('equal')
+
+plt.tight_layout()
+plt.show()
