@@ -1,0 +1,4 @@
+id_persediaan,tanggal,produk,jumlah_masuk,jumlah_keluar,stok_akhir
+PSD001,2025-01-11,Kemeja Batik,100,20,80
+PSD002,2025-01-16,Celana Jeans,200,50,150
+PSD003,2025-01-21,Jaket Kulit,150,30,120
