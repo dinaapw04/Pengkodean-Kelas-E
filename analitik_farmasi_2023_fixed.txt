@@ -1,0 +1,85 @@
+-- 1. Total Nilai Persediaan per Obat
+SELECT 
+  nama_obat,
+  SUM(unit) AS total_unit,
+  SUM(total_nilai_pokok) AS total_nilai_pokok
+FROM `farmasi_2023.persediaan_farmasi_2023`
+GROUP BY nama_obat
+ORDER BY nama_obat;
+
+-- 2. Total Biaya Pemakaian Obat (Rawat Inap) per Bulan dan per Obat
+SELECT 
+  nama_obat,
+  EXTRACT(MONTH FROM tanggal_pemakaian) AS bulan,
+  EXTRACT(YEAR FROM tanggal_pemakaian) AS tahun,
+  SUM(unit) AS total_unit_pakai,
+  SUM(total_biaya) AS total_biaya
+FROM `farmasi_2023.pemakaian_obat_rawat_inap_2023`
+GROUP BY nama_obat, EXTRACT(MONTH FROM tanggal_pemakaian), EXTRACT(YEAR FROM tanggal_pemakaian)
+ORDER BY nama_obat, tahun, bulan;
+
+-- 3. Total Pendapatan Penjualan Obat (Rawat Jalan) per Bulan dan per Obat
+SELECT 
+  nama_obat,
+  EXTRACT(MONTH FROM tanggal_penjualan) AS bulan,
+  EXTRACT(YEAR FROM tanggal_penjualan) AS tahun,
+  SUM(unit) AS total_unit_jual,
+  SUM(total_pendapatan) AS total_pendapatan
+FROM `farmasi_2023.penjualan_obat_rawat_jalan_2023`
+GROUP BY nama_obat, EXTRACT(MONTH FROM tanggal_penjualan), EXTRACT(YEAR FROM tanggal_penjualan)
+ORDER BY nama_obat, tahun, bulan;
+
+-- 4. Laba Kotor dari Penjualan Obat (Rawat Jalan)
+WITH FirstPurchase AS (
+  SELECT 
+    nama_obat,
+    tanggal_pembelian,
+    harga_pokok,
+    ROW_NUMBER() OVER (PARTITION BY nama_obat ORDER BY tanggal_pembelian) AS rn
+  FROM `farmasi_2023.persediaan_farmasi_2023`
+)
+SELECT 
+  p.nama_obat,
+  SUM(p.unit) AS total_unit_jual,
+  SUM(p.total_pendapatan) AS total_pendapatan,
+  SUM(p.unit * fp.harga_pokok) AS total_harga_pokok,
+  SUM(p.total_pendapatan - (p.unit * fp.harga_pokok)) AS laba_kotor
+FROM `farmasi_2023.penjualan_obat_rawat_jalan_2023` p
+JOIN FirstPurchase fp
+  ON p.nama_obat = fp.nama_obat
+  AND fp.rn = 1
+GROUP BY p.nama_obat
+ORDER BY p.nama_obat;
+
+-- 5. Sisa Stok per Obat (Metode FIFO)
+WITH StokMasuk AS (
+  SELECT 
+    nama_obat,
+    SUM(unit) AS total_masuk
+  FROM `farmasi_2023.persediaan_farmasi_2023`
+  GROUP BY nama_obat
+),
+Pemakaian AS (
+  SELECT 
+    nama_obat,
+    SUM(unit) AS total_pakai
+  FROM `farmasi_2023.pemakaian_obat_rawat_inap_2023`
+  GROUP BY nama_obat
+),
+Penjualan AS (
+  SELECT 
+    nama_obat,
+    SUM(unit) AS total_jual
+  FROM `farmasi_2023.penjualan_obat_rawat_jalan_2023`
+  GROUP BY nama_obat
+)
+SELECT 
+  s.nama_obat,
+  s.total_masuk,
+  COALESCE(p.total_pakai, 0) AS total_pakai,
+  COALESCE(j.total_jual, 0) AS total_jual,
+  s.total_masuk - COALESCE(p.total_pakai, 0) - COALESCE(j.total_jual, 0) AS sisa_stok
+FROM StokMasuk s
+LEFT JOIN Pemakaian p ON s.nama_obat = p.nama_obat
+LEFT JOIN Penjualan j ON s.nama_obat = j.nama_obat
+ORDER BY s.nama_obat;

@@ -1,0 +1,11 @@
+id_penjualan,nama_obat,tanggal_penjualan,unit,harga_jual,total_pendapatan
+1,Parasetamol,2023-02-20,200,750,150000
+2,Amoxicillin,2023-03-05,150,1800,270000
+3,Omeprazole,2023-04-01,100,2250,225000
+4,Metformin,2023-05-10,150,1200,180000
+5,Salbutamol,2023-06-15,100,1500,150000
+6,Parasetamol,2023-07-10,300,800,240000
+7,Amoxicillin,2023-08-05,200,1900,380000
+8,Omeprazole,2023-09-01,150,2400,360000
+9,Metformin,2023-10-01,200,1300,260000
+10,Salbutamol,2023-11-01,100,1650,165000

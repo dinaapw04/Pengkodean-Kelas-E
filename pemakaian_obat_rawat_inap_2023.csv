@@ -1,0 +1,11 @@
+id_pemakaian,nama_obat,tanggal_pemakaian,unit,harga_pokok,total_biaya
+1,Parasetamol,2023-02-15,300,500,150000
+2,Amoxicillin,2023-03-01,200,1200,240000
+3,Omeprazole,2023-03-10,150,1500,225000
+4,Metformin,2023-04-20,200,800,160000
+5,Salbutamol,2023-05-05,100,1000,100000
+6,Parasetamol,2023-06-10,400,550,220000
+7,Amoxicillin,2023-07-15,250,1250,312500
+8,Omeprazole,2023-08-01,200,1600,320000
+9,Metformin,2023-09-01,300,850,255000
+10,Salbutamol,2023-10-01,150,1100,165000
