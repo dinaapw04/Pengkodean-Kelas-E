@@ -1,0 +1,4 @@
+id_penjualan,tanggal,produk,jumlah_terjual,harga_satuan,total_penjualan
+PNL001,2025-01-12,Kemeja Batik,20,100000,2000000
+PNL002,2025-01-17,Celana Jeans,50,150000,7500000
+PNL003,2025-01-22,Jaket Kulit,30,250000,7500000

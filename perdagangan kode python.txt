@@ -1,0 +1,64 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Setup tampilan
+sns.set(style="whitegrid", context="talk", palette="bright")
+plt.rcParams['figure.figsize'] = (10, 6)
+
+# Baca data
+produksi = pd.read_csv("pergadangan_produksi.csv")
+persediaan = pd.read_csv("pergadangan_persediaan.csv")
+penjualan = pd.read_csv("pergadangan_penjualan.csv")
+
+# Konversi tanggal
+produksi['tanggal'] = pd.to_datetime(produksi['tanggal'])
+penjualan['tanggal'] = pd.to_datetime(penjualan['tanggal'])
+persediaan['tanggal'] = pd.to_datetime(persediaan['tanggal'])
+
+# 1️⃣ Total Biaya vs Penjualan
+total_biaya = produksi['biaya_produksi'].sum()
+total_penjualan = penjualan['total_penjualan'].sum()
+
+# Pie chart
+plt.figure()
+plt.pie([total_biaya, total_penjualan],
+        labels=["Total Biaya Produksi", "Total Penjualan"],
+        autopct="%1.1f%%",
+        colors=["#FF6F61", "#6B5B95"],
+        startangle=140,
+        explode=(0.05, 0.1))
+plt.title("Distribusi Biaya Produksi vs Penjualan", fontsize=16)
+plt.show()
+
+# 2️⃣ Rata-rata stok akhir per produk
+avg_stok = persediaan.groupby("produk")["stok_akhir"].mean().reset_index()
+
+plt.figure()
+sns.barplot(data=avg_stok, x="produk", y="stok_akhir", palette="pastel")
+plt.title("Rata-rata Stok Akhir per Produk", fontsize=16)
+plt.xlabel("Produk")
+plt.ylabel("Rata-rata Stok")
+plt.xticks(rotation=15)
+plt.show()
+
+# 3️⃣ Tren Produksi dan Penjualan
+plt.figure()
+sns.lineplot(data=produksi, x="tanggal", y="jumlah_diproduksi", label="Produksi", marker="o", linewidth=2.5)
+sns.lineplot(data=penjualan, x="tanggal", y="jumlah_terjual", label="Penjualan", marker="s", linewidth=2.5)
+plt.title("Tren Produksi dan Penjualan", fontsize=16)
+plt.xlabel("Tanggal")
+plt.ylabel("Jumlah")
+plt.xticks(rotation=45)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+# 4️⃣ Total Penjualan per Produk
+plt.figure()
+sns.barplot(data=penjualan, x="produk", y="total_penjualan", palette="Set2")
+plt.title("Total Penjualan per Produk", fontsize=16)
+plt.xlabel("Produk")
+plt.ylabel("Total Penjualan (Rp)")
+plt.xticks(rotation=15)
+plt.show()
