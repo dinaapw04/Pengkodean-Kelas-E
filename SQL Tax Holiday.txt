@@ -1,0 +1,19 @@
+SELECT
+  t.tahun,
+  SUM(t.pendapatan - t.beban_operasional - t.penyusutan) AS laba_kena_pajak,
+  CASE
+    WHEN t.tahun BETWEEN MIN(k.tax_holiday_awal) AND MAX(k.tax_holiday_akhir) THEN 0
+    ELSE SUM(t.pendapatan - t.beban_operasional - t.penyusutan) * MAX(k.tax_rate)
+  END AS pph_badan
+FROM
+  `modified-talon-457803-m2.PPh_Badan.Transaksi Keuangan` t
+JOIN
+  `modified-talon-457803-m2.PPh_Badan.Kebijakan Fiskal` k
+ON
+  t.tahun = k.tahun
+WHERE
+  t.skenario = 'tax_holiday'
+GROUP BY
+  t.tahun
+ORDER BY
+  t.tahun;

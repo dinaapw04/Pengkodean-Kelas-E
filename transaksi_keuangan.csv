@@ -1,0 +1,5 @@
+tahun,pendapatan,beban_operasional,penyusutan,skenario
+2023,500000,200000,50000,normal
+2023,600000,250000,60000,tax_holiday
+2024,550000,220000,55000,normal
+2024,620000,260000,62000,tax_holiday

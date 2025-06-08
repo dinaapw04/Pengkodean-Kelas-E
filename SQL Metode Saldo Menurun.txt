@@ -1,0 +1,39 @@
+WITH depresiasi_saldo_menurun AS (
+  SELECT
+    aset_id,
+    nilai_perolehan,
+    ROUND(nilai_perolehan * 0.25, 2) AS depresiasi_tahun
+  FROM
+    `modified-talon-457803-m2.PPh_Badan.Aset Tetap`
+  WHERE
+    metode = 'saldo_menurun'
+),
+total_depresiasi AS (
+  SELECT
+    SUM(depresiasi_tahun) AS total_penyusutan
+  FROM
+    depresiasi_saldo_menurun
+),
+perhitungan_pph AS (
+  SELECT
+    t.tahun,
+    SUM(t.pendapatan) AS total_pendapatan,
+    SUM(t.beban_operasional) AS total_beban_operasional,
+    d.total_penyusutan,
+    SUM(t.pendapatan) - SUM(t.beban_operasional) - d.total_penyusutan AS laba_kena_pajak,
+    k.tax_rate,
+    (SUM(t.pendapatan) - SUM(t.beban_operasional) - d.total_penyusutan) * k.tax_rate AS pph_badan
+  FROM
+    `modified-talon-457803-m2.PPh_Badan.Transaksi Keuangan` t,
+    total_depresiasi d
+  JOIN
+    `modified-talon-457803-m2.PPh_Badan.Kebijakan Fiskal` k
+  ON
+    t.tahun = k.tahun
+  WHERE
+    t.skenario = 'normal'
+  GROUP BY
+    t.tahun, d.total_penyusutan, k.tax_rate
+)
+SELECT * FROM perhitungan_pph
+ORDER BY tahun;
