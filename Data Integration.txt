@@ -1,0 +1,9 @@
+SELECT
+  p.id_penjualan,
+  p.tanggal_penjualan,
+  pr.nama_produk,
+  p.jumlah_terjual,
+  pr.harga
+FROM `modified-talon-457803-m2.Garment_Dataset.Penjualan` p
+JOIN `modified-talon-457803-m2.Garment_Dataset.Produk` pr
+  ON p.id_produk = pr.id_produk;

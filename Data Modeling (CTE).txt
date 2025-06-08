@@ -1,0 +1,22 @@
+WITH total_produksi AS (
+  SELECT
+    id_produk,
+    SUM(jumlah_diproduksi) AS total_diproduksi
+  FROM `modified-talon-457803-m2.Garment_Dataset.Produksi`
+  GROUP BY id_produk
+),
+total_penjualan AS (
+  SELECT
+    id_produk,
+    SUM(jumlah_terjual) AS total_terjual
+  FROM `modified-talon-457803-m2.Garment_Dataset.Penjualan`
+  GROUP BY id_produk
+)
+SELECT
+  pr.nama_produk,
+  prod.total_diproduksi,
+  pen.total_terjual,
+  (prod.total_diproduksi - pen.total_terjual) AS stok_akhir
+FROM total_produksi prod
+JOIN total_penjualan pen ON prod.id_produk = pen.id_produk
+JOIN `modified-talon-457803-m2.Garment_Dataset.Produk` pr ON pr.id_produk = prod.id_produk;

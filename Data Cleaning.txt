@@ -1,0 +1,14 @@
+-- Membersihkan data produk
+SELECT DISTINCT
+  TRIM(nama_produk) AS nama_produk,
+  SAFE_CAST(harga AS FLOAT64) AS harga,
+  id_produk
+FROM `modified-talon-457803-m2.Garment_Dataset.Produk`
+WHERE harga IS NOT NULL;
+
+-- Validasi NULL pada penjualan dan produksi
+SELECT * FROM `modified-talon-457803-m2.Garment_Dataset.Penjualan`
+WHERE jumlah_terjual IS NULL;
+
+SELECT * FROM `modified-talon-457803-m2.Garment_Dataset.Produksi`
+WHERE jumlah_diproduksi IS NULL;

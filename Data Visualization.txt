@@ -1,0 +1,10 @@
+-- Jalankan query ini dahulu untuk memastikan datanya tampil
+SELECT
+  FORMAT_DATE('%Y-%m', p.tanggal_penjualan) AS bulan,
+  pr.nama_produk,
+  SUM(p.jumlah_terjual * pr.harga) AS total_penjualan
+FROM `modified-talon-457803-m2.Garment_Dataset.Penjualan` p
+JOIN `modified-talon-457803-m2.Garment_Dataset.Produk` pr
+  ON p.id_produk = pr.id_produk
+GROUP BY bulan, pr.nama_produk
+ORDER BY bulan, pr.nama_produk;

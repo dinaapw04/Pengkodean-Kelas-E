@@ -1,0 +1,10 @@
+-- Produk dengan tren penjualan tertinggi yang bisa dipertimbangkan untuk ditingkatkan produksinya
+SELECT
+  pr.nama_produk,
+  SUM(p.jumlah_terjual) AS total_penjualan
+FROM `modified-talon-457803-m2.Garment_Dataset.Penjualan` p
+JOIN `modified-talon-457803-m2.Garment_Dataset.Produk` pr
+  ON p.id_produk = pr.id_produk
+GROUP BY pr.nama_produk
+ORDER BY total_penjualan DESC
+LIMIT 1;
